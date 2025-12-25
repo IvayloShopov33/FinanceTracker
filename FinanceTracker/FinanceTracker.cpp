@@ -44,6 +44,21 @@ const int FORECAST_INDEX = 5;
 const int CHART_INDEX = 6;
 const int EXIT_INDEX = 7;
 
+const char* MONTH_NAMES[MONTHS_MAX_VALUE] = {
+	"January",
+	"February",
+	"March",
+	"April",
+	"May",
+	"June",
+	"July",
+	"August",
+	"September",
+	"October",
+	"November",
+	"December"
+};
+
 size_t stringLength(const char* str)
 {
 	if (!str)
@@ -127,19 +142,29 @@ int getCommandIndex(const char* command)
 	return -1;
 }
 
-void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], bool& isProfileSetup)
+void printMonthName(int monthIndex)
 {
-	int months = 0;
-	std::cout << "Enter number of months: ";
-	std::cin >> months;
-
-	if (months < MONTHS_MIN_VALUE || months > MONTHS_MAX_VALUE)
+	if (monthIndex < MONTHS_MIN_VALUE || monthIndex > MONTHS_MAX_VALUE)
 	{
-		std::cout << "Invalid number of months for profile setup. It must be a number between 1 and 12." << std::endl;
+		std::cout << "Invalid month index." << std::endl;
 		return;
 	}
 
-	for (size_t month = 0; month < months; month++)
+	std::cout << MONTH_NAMES[monthIndex - 1];
+}
+
+void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool& isProfileSetup)
+{
+	std::cout << "Enter number of months: ";
+	std::cin >> profileMonths;
+
+	if (profileMonths < MONTHS_MIN_VALUE || profileMonths > MONTHS_MAX_VALUE)
+	{
+		std::cout << "Invalid number of months for profile setup. It must be a number between " << MONTHS_MIN_VALUE << " and " << MONTHS_MAX_VALUE << "." << std::endl;
+		return;
+	}
+
+	for (size_t month = 0; month < profileMonths; month++)
 	{
 		profileData[PROFILE_INCOME_INDEX][month] = 0;
 		profileData[PROFILE_EXPENSE_INDEX][month] = 0;
@@ -149,8 +174,44 @@ void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], boo
 	isProfileSetup = true;
 }
 
+void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool isProfileSetup)
+{
+	if (!isProfileSetup)
+	{
+		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+		return;
+	}
+
+	int month = 0;
+	std::cout << "Enter month number (1-" << profileMonths << "): ";
+	std::cin >> month;
+
+	if (month < MONTHS_MIN_VALUE || month > profileMonths)
+	{
+		std::cout << "Invalid month number. Please enter a value between " << MONTHS_MIN_VALUE << " and " << profileMonths << "." << std::endl;
+		return;
+	}
+
+	int income = 0, expense = 0;
+
+	std::cout << "Enter income: ";
+	std::cin >> income;
+	std::cout << "Enter expense: ";
+	std::cin >> expense;
+
+	profileData[PROFILE_INCOME_INDEX][month - 1] += income;
+	profileData[PROFILE_EXPENSE_INDEX][month - 1] += expense;
+
+	double balance = profileData[PROFILE_INCOME_INDEX][month - 1] - profileData[PROFILE_EXPENSE_INDEX][month - 1];
+
+	std::cout << "Balance for ";
+	printMonthName(month);
+	std::cout << ": " << (balance > 0 ? "+" : "") << balance << std::endl;
+}
+
 void executeFinanceTracker()
 {
+	int profileMonths = 0;
 	bool isProfileSetup = false;
 	double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE] = { 0 };
 
@@ -174,9 +235,10 @@ void executeFinanceTracker()
 			case EXIT_INDEX:
 				return;
 			case SETUP_INDEX:
-				setupProfile(profileData, isProfileSetup);
+				setupProfile(profileData, profileMonths, isProfileSetup);
 				break;
 			case ADD_INDEX:
+				addFinanceData(profileData, profileMonths, isProfileSetup);
 				break;
 			case REPORT_INDEX:
 				break;
