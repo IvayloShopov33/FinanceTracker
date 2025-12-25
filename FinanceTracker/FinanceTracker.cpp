@@ -14,6 +14,7 @@
 */
 
 #include <iostream>
+#include <iomanip> // for std::setprecision and std::fixed
 
 const int MONTHS_MAX_VALUE = 12;
 const int MONTHS_MIN_VALUE = 1;
@@ -57,6 +58,21 @@ const char* MONTH_NAMES[MONTHS_MAX_VALUE] = {
 	"October",
 	"November",
 	"December"
+};
+
+const char* MONTH_ABBREVIATIONS[MONTHS_MAX_VALUE] = {
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec"
 };
 
 size_t stringLength(const char* str)
@@ -174,7 +190,7 @@ void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int
 	isProfileSetup = true;
 }
 
-void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool isProfileSetup)
+void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup)
 {
 	if (!isProfileSetup)
 	{
@@ -209,6 +225,45 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 	std::cout << ": " << (balance > 0 ? "+" : "") << balance << std::endl;
 }
 
+void monthlyReport(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup)
+{
+	if (!isProfileSetup)
+	{
+		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+		return;
+	}
+
+	std::cout << "Month | Income | Expense | Balance " << std::endl;
+	std::cout << "---------------------------------- " << std::endl;
+
+	double totalIncome = 0;
+	double totalExpenses = 0;
+	int activeMonths = 0;
+
+	for (int month = 0; month < profileMonths; month++)
+	{
+		if (profileData[PROFILE_INCOME_INDEX][month] != 0 || profileData[PROFILE_EXPENSE_INDEX][month] != 0)
+		{
+			double income = profileData[PROFILE_INCOME_INDEX][month];
+			double expense = profileData[PROFILE_EXPENSE_INDEX][month];
+			double balance = income - expense;
+			std::cout << MONTH_ABBREVIATIONS[month] << " | " << std::fixed << std::setprecision(2) << income << " | " << std::fixed << std::setprecision(2) << expense << " | " << (balance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << balance << std::endl;
+
+			totalIncome += income;
+			totalExpenses += expense;
+			activeMonths++;
+		}
+	}
+
+	std::cout << "---------------------------------- " << std::endl;
+
+	std::cout << "Total income: " << std::fixed << std::setprecision(2) << totalIncome << std::endl;
+	std::cout << "Total expense: " << std::fixed << std::setprecision(2) << totalExpenses << std::endl;
+
+	double averageBalance = (totalIncome - totalExpenses) / activeMonths;
+	std::cout << "Average Balance: " << (averageBalance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << averageBalance << std::endl;
+}
+
 void executeFinanceTracker()
 {
 	int profileMonths = 0;
@@ -232,27 +287,28 @@ void executeFinanceTracker()
 
 		switch (commandIndex)
 		{
-			case EXIT_INDEX:
-				return;
-			case SETUP_INDEX:
-				setupProfile(profileData, profileMonths, isProfileSetup);
-				break;
-			case ADD_INDEX:
-				addFinanceData(profileData, profileMonths, isProfileSetup);
-				break;
-			case REPORT_INDEX:
-				break;
-			case SEARCH_INDEX:
-				break;
-			case SORT_INDEX:
-				break;
-			case FORECAST_INDEX:
-				break;
-			case CHART_INDEX:
-				break;
-			default:
-				std::cout << "Invalid command. Please try again." << std::endl;
-				break;
+		case EXIT_INDEX:
+			return;
+		case SETUP_INDEX:
+			setupProfile(profileData, profileMonths, isProfileSetup);
+			break;
+		case ADD_INDEX:
+			addFinanceData(profileData, profileMonths, isProfileSetup);
+			break;
+		case REPORT_INDEX:
+			monthlyReport(profileData, profileMonths, isProfileSetup);
+			break;
+		case SEARCH_INDEX:
+			break;
+		case SORT_INDEX:
+			break;
+		case FORECAST_INDEX:
+			break;
+		case CHART_INDEX:
+			break;
+		default:
+			std::cout << "Invalid command. Please try again." << std::endl;
+			break;
 		}
 
 		std::cin >> command;
