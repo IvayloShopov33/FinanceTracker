@@ -15,7 +15,8 @@
 
 #include <iostream>
 
-const int MONTHS = 12;
+const int MONTHS_MAX_VALUE = 12;
+const int MONTHS_MIN_VALUE = 1;
 
 const int PROFILE_INCOME_INDEX = 0;
 const int PROFILE_EXPENSE_INDEX = 1;
@@ -126,24 +127,54 @@ int getCommandIndex(const char* command)
 	return -1;
 }
 
+void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], bool& isProfileSetup)
+{
+	int months = 0;
+	std::cout << "Enter number of months: ";
+	std::cin >> months;
+
+	if (months < MONTHS_MIN_VALUE || months > MONTHS_MAX_VALUE)
+	{
+		std::cout << "Invalid number of months for profile setup. It must be a number between 1 and 12." << std::endl;
+		return;
+	}
+
+	for (size_t month = 0; month < months; month++)
+	{
+		profileData[PROFILE_INCOME_INDEX][month] = 0;
+		profileData[PROFILE_EXPENSE_INDEX][month] = 0;
+	}
+
+	std::cout << "Profile created successfully." << std::endl;
+	isProfileSetup = true;
+}
+
 void executeFinanceTracker()
 {
-	int profileMonths = 0;
-	double profileData[PROFILE_TOTAL_INDEX][MONTHS] = { 0 };
+	bool isProfileSetup = false;
+	double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE] = { 0 };
 
 	char command[COMMAND_MAX_SIZE];
-	std::cin.getline(command, COMMAND_MAX_SIZE, '\n');
+	std::cin >> command;
 
 	while (true)
 	{
 		toLowercase(command);
 		int commandIndex = getCommandIndex(command);
 
+		if (isProfileSetup && commandIndex == SETUP_INDEX)
+		{
+			std::cout << "The profile has already been set." << std::endl;
+			std::cin >> command;
+			continue;
+		}
+
 		switch (commandIndex)
 		{
 			case EXIT_INDEX:
 				return;
 			case SETUP_INDEX:
+				setupProfile(profileData, isProfileSetup);
 				break;
 			case ADD_INDEX:
 				break;
@@ -162,7 +193,7 @@ void executeFinanceTracker()
 				break;
 		}
 
-		std::cin.getline(command, COMMAND_MAX_SIZE, '\n');
+		std::cin >> command;
 	}
 }
 
