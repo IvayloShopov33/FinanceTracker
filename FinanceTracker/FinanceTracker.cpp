@@ -45,6 +45,8 @@ const int FORECAST_INDEX = 5;
 const int CHART_INDEX = 6;
 const int EXIT_INDEX = 7;
 
+const int PERCENTAGE_CONVERSION_FACTOR = 100;
+
 const char* MONTH_NAMES[MONTHS_MAX_VALUE] = {
 	"January",
 	"February",
@@ -150,6 +152,25 @@ void printMonthName(int monthIndex) {
 	std::cout << MONTH_NAMES[monthIndex - 1];
 }
 
+int parseMonthName(char* monthName) {
+	if (!monthName) {
+		return -1;
+	}
+
+	if (!isCharacterUppercase(monthName[0]))
+	{
+		monthName[0] -= 'a' - 'A';
+	}
+
+	for (int i = 0; i < MONTHS_MAX_VALUE; i++) {
+		if (areStringsEqual(monthName, MONTH_NAMES[i])) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool& isProfileSetup) {
 	std::cout << "Enter number of months: ";
 	std::cin >> profileMonths;
@@ -235,6 +256,44 @@ void monthlyReport(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 	std::cout << "Average Balance: " << (averageBalance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << averageBalance << std::endl;
 }
 
+void searchByMonth(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, char* targetMonth) {
+	if (!targetMonth)
+	{
+		std::cout << "Invalid month input." << std::endl;
+		return;
+	}
+
+	if (!isProfileSetup) {
+		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+		return;
+	}
+
+	toLowercase(targetMonth);
+	int monthIndex = parseMonthName(targetMonth);
+
+	if (monthIndex == -1 || monthIndex >= profileMonths) {
+		std::cout << "Month not found in the profile." << std::endl;
+		return;
+	}
+
+	double monthIncome = profileData[PROFILE_INCOME_INDEX][monthIndex];
+	double monthExpense = profileData[PROFILE_EXPENSE_INDEX][monthIndex];
+
+	std::cout << "Income: " << std::fixed << std::setprecision(2) << monthIncome << std::endl;
+	std::cout << "Expense: " << std::fixed << std::setprecision(2) << monthExpense << std::endl;
+
+	double balance = monthIncome - monthExpense;
+	std::cout << "Balance: " << (balance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << balance << std::endl;
+
+	if (monthIncome != 0) {
+		double expenseRatio = (monthExpense / monthIncome) * PERCENTAGE_CONVERSION_FACTOR;
+		std::cout << "Expense Ratio: " << std::fixed << std::setprecision(1) << expenseRatio << "%" << std::endl;
+	}
+	else {
+		std::cout << "Expense Ratio: N/A (No income recorded)" << std::endl;
+	}
+}
+
 void executeFinanceTracker() {
 	int profileMonths = 0;
 	bool isProfileSetup = false;
@@ -266,6 +325,9 @@ void executeFinanceTracker() {
 				monthlyReport(profileData, profileMonths, isProfileSetup);
 				break;
 			case SEARCH_INDEX:
+				char targetMonth[COMMAND_MAX_SIZE];
+				std::cin >> targetMonth;
+				searchByMonth(profileData, profileMonths, isProfileSetup, targetMonth);
 				break;
 			case SORT_INDEX:
 				break;
