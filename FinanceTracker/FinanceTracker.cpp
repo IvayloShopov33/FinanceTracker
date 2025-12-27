@@ -45,7 +45,15 @@ const int FORECAST_INDEX = 5;
 const int CHART_INDEX = 6;
 const int EXIT_INDEX = 7;
 
+const int INVALID_INDEX = -1;
 const int PERCENTAGE_CONVERSION_FACTOR = 100;
+const int IGNORE_CHARACTERS_COUNT = 1000;
+
+const int SORTING_INCOME_INDEX = 0;
+const int SORTING_EXPENSE_INDEX = 1;
+const int SORTING_BALANCE_INDEX = 2;
+const int SORTING_TYPES_COUNT = 3;
+const int SORTING_TOP_LIMIT = 3;
 
 const char* MONTH_NAMES[MONTHS_MAX_VALUE] = {
 	"January",
@@ -75,6 +83,12 @@ const char* MONTH_ABBREVIATIONS[MONTHS_MAX_VALUE] = {
 	"Oct",
 	"Nov",
 	"Dec"
+};
+
+const char* TYPES[SORTING_TYPES_COUNT] = {
+	"income",
+	"expense",
+	"balance"
 };
 
 size_t stringLength(const char* str) {
@@ -131,7 +145,7 @@ bool areStringsEqual(const char* firstString, const char* secondString) {
 
 int getCommandIndex(const char* command) {
 	if (!command) {
-		return -1;
+		return INVALID_INDEX;
 	}
 
 	for (int i = 0; i < COMMANDS_COUNT; i++) {
@@ -140,7 +154,7 @@ int getCommandIndex(const char* command) {
 		}
 	}
 
-	return -1;
+	return INVALID_INDEX;
 }
 
 void printMonthName(int monthIndex) {
@@ -154,7 +168,7 @@ void printMonthName(int monthIndex) {
 
 int parseMonthName(char* monthName) {
 	if (!monthName) {
-		return -1;
+		return INVALID_INDEX;
 	}
 
 	if (!isCharacterUppercase(monthName[0]))
@@ -168,12 +182,53 @@ int parseMonthName(char* monthName) {
 		}
 	}
 
-	return -1;
+	return INVALID_INDEX;
+}
+
+int parseSortingType(char* sortType) {
+	if (!sortType) {
+		return INVALID_INDEX;
+	}
+
+	for (int i = 0; i < SORTING_TYPES_COUNT; i++) {
+		if (areStringsEqual(sortType, TYPES[i])) {
+			return i;
+		}
+	}
+
+	return INVALID_INDEX;
+}
+
+void swap(int& firstValue, int& secondValue) {
+	firstValue += secondValue;
+	secondValue = firstValue - secondValue;
+	firstValue -= secondValue;
+}
+
+double getValueByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int monthIndex, int sortingTypeIndex) {
+	switch (sortingTypeIndex) {
+		case SORTING_INCOME_INDEX:
+			return profileData[PROFILE_INCOME_INDEX][monthIndex];
+		case SORTING_EXPENSE_INDEX:
+			return profileData[PROFILE_EXPENSE_INDEX][monthIndex];
+		case SORTING_BALANCE_INDEX:
+			return profileData[PROFILE_INCOME_INDEX][monthIndex] - profileData[PROFILE_EXPENSE_INDEX][monthIndex];
+		default:
+			return 0;
+	}
 }
 
 void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool& isProfileSetup) {
 	std::cout << "Enter number of months: ";
 	std::cin >> profileMonths;
+
+	if (std::cin.fail()) {
+		std::cin.clear();
+		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
+		std::cout << "Error: Please enter a valid number." << std::endl;
+
+		return;
+	}
 
 	if (profileMonths < MONTHS_MIN_VALUE || profileMonths > MONTHS_MAX_VALUE) {
 		std::cout << "Invalid number of months for profile setup. It must be a number between " << MONTHS_MIN_VALUE << " and " << MONTHS_MAX_VALUE << "." << std::endl;
@@ -199,6 +254,14 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 	std::cout << "Enter month number (1-" << profileMonths << "): ";
 	std::cin >> month;
 
+	if (std::cin.fail()) {
+		std::cin.clear();
+		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
+		std::cout << "Error: Please enter a valid number." << std::endl;
+
+		return;
+	}
+
 	if (month < MONTHS_MIN_VALUE || month > profileMonths) {
 		std::cout << "Invalid month number. Please enter a value between " << MONTHS_MIN_VALUE << " and " << profileMonths << "." << std::endl;
 		return;
@@ -208,8 +271,25 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 
 	std::cout << "Enter income: ";
 	std::cin >> income;
+
+	if (std::cin.fail()) {
+		std::cin.clear();
+		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
+		std::cout << "Error: Please enter a valid number." << std::endl;
+
+		return;
+	}
+
 	std::cout << "Enter expense: ";
 	std::cin >> expense;
+
+	if (std::cin.fail()) {
+		std::cin.clear();
+		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
+		std::cout << "Error: Please enter a valid number." << std::endl;
+
+		return;
+	}
 
 	profileData[PROFILE_INCOME_INDEX][month - 1] += income;
 	profileData[PROFILE_EXPENSE_INDEX][month - 1] += expense;
@@ -271,7 +351,7 @@ void searchByMonth(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 	toLowercase(targetMonth);
 	int monthIndex = parseMonthName(targetMonth);
 
-	if (monthIndex == -1 || monthIndex >= profileMonths) {
+	if (monthIndex == INVALID_INDEX || monthIndex >= profileMonths) {
 		std::cout << "Month not found in the profile." << std::endl;
 		return;
 	}
@@ -291,6 +371,52 @@ void searchByMonth(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 	}
 	else {
 		std::cout << "Expense Ratio: N/A (No income recorded)" << std::endl;
+	}
+}
+
+void sortByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, char* sortType) {
+	if (!sortType) {
+		return;
+	}
+
+	if (!isProfileSetup) {
+		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+		return;
+	}
+
+	toLowercase(sortType);
+	int sortingTypeIndex = parseSortingType(sortType);
+
+	if (sortingTypeIndex == INVALID_INDEX)
+	{
+		std::cout << "Invalid sorting type. Please use sorting type between 'income', 'expense', 'balance'." << std::endl;
+		return;
+	}
+
+	int indicesOfMonths[MONTHS_MAX_VALUE] = { 0 };
+	for (int i = 0; i < profileMonths; i++) {
+		indicesOfMonths[i] = i;
+	}
+
+	// Bubble sort - sorting in descending order
+	for (size_t i = 0; i < profileMonths - 1; i++) {
+		for (size_t j = 0; j < profileMonths - i - 1; j++)
+		{
+			double firstValue = getValueByType(profileData, indicesOfMonths[j], sortingTypeIndex);
+			double secondValue = getValueByType(profileData, indicesOfMonths[j + 1], sortingTypeIndex);
+
+			if (firstValue < secondValue) {
+				swap(indicesOfMonths[j], indicesOfMonths[j + 1]);
+			}
+		}
+	}
+
+	int sortingLimit = (profileMonths < SORTING_TOP_LIMIT) ? profileMonths : SORTING_TOP_LIMIT;
+	std::cout << "Top " << sortingLimit << " months by " << sortType << ":" << std::endl;
+
+	for (int i = 0; i < sortingLimit; i++) {
+		double sortedValue = getValueByType(profileData, indicesOfMonths[i], sortingTypeIndex);
+		std::cout << i + 1 << ". " << MONTH_ABBREVIATIONS[indicesOfMonths[i]] << ": " << (sortedValue >= 0 ? "+" : "") << std::fixed << std::setprecision(2) << sortedValue << std::endl;
 	}
 }
 
@@ -314,6 +440,7 @@ void executeFinanceTracker() {
 
 		switch (commandIndex) {
 			case EXIT_INDEX:
+				monthlyReport(profileData, profileMonths, isProfileSetup);
 				return;
 			case SETUP_INDEX:
 				setupProfile(profileData, profileMonths, isProfileSetup);
@@ -330,6 +457,9 @@ void executeFinanceTracker() {
 				searchByMonth(profileData, profileMonths, isProfileSetup, targetMonth);
 				break;
 			case SORT_INDEX:
+				char sortType[COMMAND_MAX_SIZE];
+				std::cin >> sortType;
+				sortByType(profileData, profileMonths, isProfileSetup, sortType);
 				break;
 			case FORECAST_INDEX:
 				break;
