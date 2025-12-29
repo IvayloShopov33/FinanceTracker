@@ -241,15 +241,45 @@ double getValueByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE],
 	}
 }
 
-void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool& isProfileSetup) {
-	std::cout << "Enter number of months: ";
-	std::cin >> profileMonths;
+void sortMonthIndices(int indicesOfMonths[MONTHS_MAX_VALUE], int monthsCount, double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int typeIndex) {
+	for (size_t i = 0; i < monthsCount - 1; i++) {
+		for (size_t j = 0; j < monthsCount - i - 1; j++) {
+			double firstValue = getValueByType(profileData, indicesOfMonths[j], typeIndex);
+			double secondValue = getValueByType(profileData, indicesOfMonths[j + 1], typeIndex);
 
+			if (firstValue < secondValue) {
+				swap(indicesOfMonths[j], indicesOfMonths[j + 1]);
+			}
+		}
+	}
+}
+
+bool isInputInvalid() {
 	if (std::cin.fail()) {
 		std::cin.clear();
 		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
 		std::cout << "Error: Please enter a valid number." << std::endl;
 
+		return true;
+	}
+
+	return false;
+}
+
+bool isProfileNotCreated(bool isProfileSetup) {
+	if (!isProfileSetup) {
+		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+		return true;
+	}
+
+	return false;
+}
+
+void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool& isProfileSetup) {
+	std::cout << "Enter number of months: ";
+	std::cin >> profileMonths;
+
+	if (isInputInvalid()) {
 		return;
 	}
 
@@ -268,8 +298,7 @@ void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int
 }
 
 void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup) {
-	if (!isProfileSetup) {
-		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+	if (isProfileNotCreated(isProfileSetup)) {
 		return;
 	}
 
@@ -277,11 +306,7 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 	std::cout << "Enter month number (1-" << profileMonths << "): ";
 	std::cin >> month;
 
-	if (std::cin.fail()) {
-		std::cin.clear();
-		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
-		std::cout << "Error: Please enter a valid number." << std::endl;
-
+	if (isInputInvalid()) {
 		return;
 	}
 
@@ -290,27 +315,25 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 		return;
 	}
 
+	if (profileData[PROFILE_INCOME_INDEX][month - 1] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month - 1] != MONTH_DEFAULT_EMPTY_VALUE) {
+		std::cout << "[Note: Adding to existing data for ";
+		printMonthName(month);
+		std::cout << "]" << std::endl;
+	}
+
 	int income = 0, expense = 0;
 
 	std::cout << "Enter income: ";
 	std::cin >> income;
 
-	if (std::cin.fail()) {
-		std::cin.clear();
-		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
-		std::cout << "Error: Please enter a valid number." << std::endl;
-
+	if (isInputInvalid()) {
 		return;
 	}
 
 	std::cout << "Enter expense: ";
 	std::cin >> expense;
 
-	if (std::cin.fail()) {
-		std::cin.clear();
-		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
-		std::cout << "Error: Please enter a valid number." << std::endl;
-
+	if (isInputInvalid()) {
 		return;
 	}
 
@@ -325,8 +348,7 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 }
 
 void monthlyReport(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup) {
-	if (!isProfileSetup) {
-		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+	if (isProfileNotCreated(isProfileSetup)) {
 		return;
 	}
 
@@ -368,14 +390,12 @@ void monthlyReport(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 }
 
 void searchByMonth(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, char* targetMonth) {
-	if (!targetMonth)
-	{
+	if (!targetMonth) {
 		std::cout << "Invalid month input." << std::endl;
 		return;
 	}
 
-	if (!isProfileSetup) {
-		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+	if (isProfileNotCreated(isProfileSetup)) {
 		return;
 	}
 
@@ -407,11 +427,11 @@ void searchByMonth(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 
 void sortByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, char* sortType) {
 	if (!sortType) {
+		std::cout << "Invalid sorting type input." << std::endl;
 		return;
 	}
 
-	if (!isProfileSetup) {
-		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+	if (isProfileNotCreated(isProfileSetup)) {
 		return;
 	}
 
@@ -430,17 +450,7 @@ void sortByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int p
 	}
 
 	// Bubble sort - sorting in descending order
-	for (size_t i = 0; i < profileMonths - 1; i++) {
-		for (size_t j = 0; j < profileMonths - i - 1; j++)
-		{
-			double firstValue = getValueByType(profileData, indicesOfMonths[j], sortingTypeIndex);
-			double secondValue = getValueByType(profileData, indicesOfMonths[j + 1], sortingTypeIndex);
-
-			if (firstValue < secondValue) {
-				swap(indicesOfMonths[j], indicesOfMonths[j + 1]);
-			}
-		}
-	}
+	sortMonthIndices(indicesOfMonths, profileMonths, profileData, sortingTypeIndex);
 
 	int sortingLimit = (profileMonths < SORTING_TOP_LIMIT) ? profileMonths : SORTING_TOP_LIMIT;
 	std::cout << "Top " << sortingLimit << " months by " << sortType << ":" << std::endl;
@@ -452,8 +462,7 @@ void sortByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int p
 }
 
 void forecastSavings(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, int monthsAhead) {
-	if (!isProfileSetup) {
-		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+	if (isProfileNotCreated(isProfileSetup)) {
 		return;
 	}
 
@@ -497,12 +506,11 @@ void forecastSavings(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], 
 }
 
 void validateMonthsInputAndCallForecast(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, int monthsAhead) {
-	if (std::cin.fail()) {
-		std::cin.clear();
-		std::cin.ignore(IGNORE_CHARACTERS_COUNT, '\n');
-		std::cout << "Error: Please enter a valid number." << std::endl;
+	if (isInputInvalid()) {
+		return;
 	}
-	else if (monthsAhead < 0) {
+
+	if (monthsAhead < 0) {
 		std::cout << "Error: Months ahead cannot be a negative number." << std::endl;
 	}
 	else {
@@ -543,11 +551,11 @@ void printChartAxisMonths(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VAL
 void drawFinanceChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, char* chartType) {
 	if (!chartType)
 	{
+		std::cout << "Invalid chart type input." << std::endl;
 		return;
 	}
 
-	if (!isProfileSetup) {
-		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+	if (isProfileNotCreated(isProfileSetup)) {
 		return;
 	}
 
