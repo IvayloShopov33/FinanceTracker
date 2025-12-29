@@ -194,8 +194,7 @@ int parseMonthName(char* monthName) {
 		return INVALID_INDEX;
 	}
 
-	if (!isCharacterUppercase(monthName[0]))
-	{
+	if (!isCharacterUppercase(monthName[0])) {
 		monthName[0] -= 'a' - 'A';
 	}
 
@@ -438,8 +437,7 @@ void sortByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int p
 	toLowercase(sortType);
 	int sortingTypeIndex = parseSortingType(sortType);
 
-	if (sortingTypeIndex == INVALID_INDEX)
-	{
+	if (sortingTypeIndex == INVALID_INDEX) {
 		std::cout << "Invalid sorting type. Please use sorting type between 'income', 'expense', 'balance'." << std::endl;
 		return;
 	}
@@ -518,7 +516,7 @@ void validateMonthsInputAndCallForecast(double profileData[PROFILE_TOTAL_INDEX][
 	}
 }
 
-double getMaxValueForChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, int typeIndex) {
+int getMaxValueForChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, int typeIndex) {
 	if (profileMonths <= 0) {
 		return 0;
 	}
@@ -537,10 +535,8 @@ double getMaxValueForChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VA
 }
 
 void printChartAxisMonths(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths) {
-	for (size_t month = 0; month < profileMonths; month++)
-	{
-		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE)
-		{
+	for (size_t month = 0; month < profileMonths; month++) {
+		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE) {
 			std::cout << MONTH_ABBREVIATIONS[month] << " ";
 		}
 	}
@@ -549,8 +545,7 @@ void printChartAxisMonths(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VAL
 }
 
 void drawFinanceChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, char* chartType) {
-	if (!chartType)
-	{
+	if (!chartType) {
 		std::cout << "Invalid chart type input." << std::endl;
 		return;
 	}
@@ -562,19 +557,18 @@ void drawFinanceChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE],
 	toLowercase(chartType);
 	int chartTypeIndex = parseSortingType(chartType);
 
-	if (chartTypeIndex == INVALID_INDEX)
-	{
+	if (chartTypeIndex == INVALID_INDEX) {
 		std::cout << "Invalid chart type. Please use chart type between 'income', 'expense' or 'balance'." << std::endl;
 		return;
 	}
 
-	double maxValue = getMaxValueForChart(profileData, profileMonths, chartTypeIndex);
+	int maxValue = getMaxValueForChart(profileData, profileMonths, chartTypeIndex);
 	toUppercase(chartType);
 
 	std::cout << "=== YEARLY FINANCIAL " << chartType << " CHART === " << std::endl;
 	std::cout << "    | " << std::endl;
 
-	for (int chartLevel = (int)maxValue; chartLevel > 0; chartLevel -= CHART_SCALE_FACTOR) {
+	for (int chartLevel = maxValue; chartLevel > 0; chartLevel -= CHART_SCALE_FACTOR) {
 		if (chartLevel < CHART_SCALE_10K) std::cout << " ";
 		if (chartLevel < CHART_SCALE_1K) std::cout << " ";
 		std::cout << chartLevel << " | ";
@@ -598,8 +592,7 @@ void drawFinanceChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE],
 	printChartAxisMonths(profileData, profileMonths);
 }
 
-void handleCommand(int commandIndex, double  profileData[2][12], int& profileMonths, bool& isProfileSetup)
-{
+void handleCommand(int commandIndex, double  profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool& isProfileSetup) {
 	switch (commandIndex) {
 		case SETUP_INDEX:
 			setupProfile(profileData, profileMonths, isProfileSetup);
