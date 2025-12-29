@@ -18,6 +18,7 @@
 
 const int MONTHS_MAX_VALUE = 12;
 const int MONTHS_MIN_VALUE = 1;
+const int MONTH_DEFAULT_EMPTY_VALUE = 0;
 
 const int PROFILE_INCOME_INDEX = 0;
 const int PROFILE_EXPENSE_INDEX = 1;
@@ -48,6 +49,10 @@ const int EXIT_INDEX = 7;
 const int INVALID_INDEX = -1;
 const int PERCENTAGE_CONVERSION_FACTOR = 100;
 const int IGNORE_CHARACTERS_COUNT = 1000;
+
+const int CHART_SCALE_FACTOR = 500;
+const int CHART_SCALE_10K = 10000;
+const int CHART_SCALE_1K = 1000;
 
 const int SORTING_INCOME_INDEX = 0;
 const int SORTING_EXPENSE_INDEX = 1;
@@ -122,6 +127,20 @@ void toLowercase(char* str) {
 	for (int i = 0; i < strLength; i++) {
 		if (isCharacterUppercase(str[i])) {
 			str[i] = str[i] + ('a' - 'A');
+		}
+	}
+}
+
+void toUppercase(char* str) {
+	if (!str) {
+		return;
+	}
+
+	size_t strLength = stringLength(str);
+
+	for (int i = 0; i < strLength; i++) {
+		if (!isCharacterUppercase(str[i])) {
+			str[i] = str[i] - ('a' - 'A');
 		}
 	}
 }
@@ -240,8 +259,8 @@ void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int
 	}
 
 	for (size_t month = 0; month < profileMonths; month++) {
-		profileData[PROFILE_INCOME_INDEX][month] = 0;
-		profileData[PROFILE_EXPENSE_INDEX][month] = 0;
+		profileData[PROFILE_INCOME_INDEX][month] = MONTH_DEFAULT_EMPTY_VALUE;
+		profileData[PROFILE_EXPENSE_INDEX][month] = MONTH_DEFAULT_EMPTY_VALUE;
 	}
 
 	std::cout << "Profile created successfully." << std::endl;
@@ -319,11 +338,14 @@ void monthlyReport(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 	int activeMonths = 0;
 
 	for (int month = 0; month < profileMonths; month++) {
-		if (profileData[PROFILE_INCOME_INDEX][month] != 0 || profileData[PROFILE_EXPENSE_INDEX][month] != 0) {
+		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE) {
 			double income = profileData[PROFILE_INCOME_INDEX][month];
 			double expense = profileData[PROFILE_EXPENSE_INDEX][month];
 			double balance = income - expense;
-			std::cout << MONTH_ABBREVIATIONS[month] << " | " << std::fixed << std::setprecision(2) << income << " | " << std::fixed << std::setprecision(2) << expense << " | " << (balance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << balance << std::endl;
+
+			std::cout << MONTH_ABBREVIATIONS[month] << " | " << std::fixed << std::setprecision(2) << income << " | ";
+			std::cout << std::fixed << std::setprecision(2) << expense << " | ";
+			std::cout << (balance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << balance << std::endl;
 
 			totalIncome += income;
 			totalExpenses += expense;
@@ -374,7 +396,7 @@ void searchByMonth(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 	double balance = monthIncome - monthExpense;
 	std::cout << "Balance: " << (balance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << balance << std::endl;
 
-	if (monthIncome != 0) {
+	if (monthIncome != MONTH_DEFAULT_EMPTY_VALUE) {
 		double expenseRatio = (monthExpense / monthIncome) * PERCENTAGE_CONVERSION_FACTOR;
 		std::cout << "Expense Ratio: " << std::fixed << std::setprecision(1) << expenseRatio << "%" << std::endl;
 	}
@@ -438,19 +460,17 @@ void forecastSavings(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], 
 	double totalSavings = 0;
 	int activeMonths = 0;
 
-	for (size_t i = 0; i < profileMonths; i++)
-	{
+	for (size_t i = 0; i < profileMonths; i++) {
 		double currentMonthIncome = profileData[PROFILE_INCOME_INDEX][i];
 		double currentMonthExpense = profileData[PROFILE_EXPENSE_INDEX][i];
 
-		if (currentMonthIncome != 0 || currentMonthExpense != 0) {
+		if (currentMonthIncome != MONTH_DEFAULT_EMPTY_VALUE || currentMonthExpense != MONTH_DEFAULT_EMPTY_VALUE) {
 			totalSavings += (currentMonthIncome - currentMonthExpense);
 			activeMonths++;
 		}		
 	}
 
-	if (activeMonths == 0)
-	{
+	if (activeMonths == 0) {
 		std::cout << "No data available to perform a forecast." << std::endl;
 		return;
 	}
@@ -488,6 +508,82 @@ void validateMonthsInputAndCallForecast(double profileData[PROFILE_TOTAL_INDEX][
 	else {
 		forecastSavings(profileData, profileMonths, isProfileSetup, monthsAhead);
 	}
+}
+
+double getMaxValueForChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, int typeIndex) {
+	if (profileMonths <= 0) {
+		return 0;
+	}
+
+	int maxValue = getValueByType(profileData, 0, typeIndex);
+
+	for (int i = 1; i < profileMonths; i++) {
+		double currentValue = getValueByType(profileData, i, typeIndex);
+
+		if (currentValue > maxValue) {
+			maxValue = (int)currentValue;
+		}
+	}
+
+	return maxValue;
+}
+
+void drawFinanceChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, char* chartType) {
+	if (!chartType)
+	{
+		return;
+	}
+
+	if (!isProfileSetup) {
+		std::cout << "The profile is not created yet. Use 'setup' first." << std::endl;
+		return;
+	}
+
+	toLowercase(chartType);
+	int chartTypeIndex = parseSortingType(chartType);
+
+	if (chartTypeIndex == INVALID_INDEX)
+	{
+		std::cout << "Invalid chart type. Please use chart type between 'income', 'expense' or 'balance'." << std::endl;
+		return;
+	}
+
+	double maxValue = getMaxValueForChart(profileData, profileMonths, chartTypeIndex);
+	toUppercase(chartType);
+
+	std::cout << "=== YEARLY FINANCIAL " << chartType << " CHART === " << std::endl;
+	std::cout << "    | " << std::endl;
+
+	for (int chartLevel = (int)maxValue; chartLevel > 0; chartLevel -= CHART_SCALE_FACTOR) {
+		if (chartLevel < CHART_SCALE_10K) std::cout << " ";
+		if (chartLevel < CHART_SCALE_1K) std::cout << " ";
+		std::cout << chartLevel << " | ";
+
+		for (int month = 0; month < profileMonths; month++) {
+			double monthValue = getValueByType(profileData, month, chartTypeIndex);
+			if (monthValue >= chartLevel) {
+				std::cout << "#   ";
+			}
+			else {
+				std::cout << "    ";
+			}
+		}
+
+		std::cout << std::endl;
+	}
+
+	std::cout << "    --------------------------- " << std::endl;
+	std::cout << "     ";
+
+	for (size_t month = 0; month < profileMonths; month++)
+	{
+		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE)
+		{
+			std::cout << MONTH_ABBREVIATIONS[month] << " ";
+		}
+	}
+
+	std::cout << std::endl;
 }
 
 void executeFinanceTracker() {
@@ -539,8 +635,12 @@ void executeFinanceTracker() {
 				validateMonthsInputAndCallForecast(profileData, profileMonths, isProfileSetup, monthsAhead);
 				break;
 			}
-			case CHART_INDEX:
+			case CHART_INDEX: {
+				char chartType[COMMAND_MAX_SIZE];
+				std::cin >> chartType;
+				drawFinanceChart(profileData, profileMonths, isProfileSetup, chartType);
 				break;
+			}
 			default:
 				std::cout << "Invalid command. Please try again." << std::endl;
 				break;
