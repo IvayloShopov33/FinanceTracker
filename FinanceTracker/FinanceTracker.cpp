@@ -515,7 +515,7 @@ double getMaxValueForChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VA
 		return 0;
 	}
 
-	int maxValue = getValueByType(profileData, 0, typeIndex);
+	int maxValue = (int)getValueByType(profileData, 0, typeIndex);
 
 	for (int i = 1; i < profileMonths; i++) {
 		double currentValue = getValueByType(profileData, i, typeIndex);
@@ -526,6 +526,18 @@ double getMaxValueForChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VA
 	}
 
 	return maxValue;
+}
+
+void printChartAxisMonths(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths) {
+	for (size_t month = 0; month < profileMonths; month++)
+	{
+		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE)
+		{
+			std::cout << MONTH_ABBREVIATIONS[month] << " ";
+		}
+	}
+
+	std::cout << std::endl;
 }
 
 void drawFinanceChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, char* chartType) {
@@ -575,15 +587,49 @@ void drawFinanceChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE],
 	std::cout << "    --------------------------- " << std::endl;
 	std::cout << "     ";
 
-	for (size_t month = 0; month < profileMonths; month++)
-	{
-		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE)
-		{
-			std::cout << MONTH_ABBREVIATIONS[month] << " ";
-		}
-	}
+	printChartAxisMonths(profileData, profileMonths);
+}
 
-	std::cout << std::endl;
+void handleCommand(int commandIndex, double  profileData[2][12], int& profileMonths, bool& isProfileSetup)
+{
+	switch (commandIndex) {
+		case SETUP_INDEX:
+			setupProfile(profileData, profileMonths, isProfileSetup);
+			break;
+		case ADD_INDEX:
+			addFinanceData(profileData, profileMonths, isProfileSetup);
+			break;
+		case REPORT_INDEX:
+			monthlyReport(profileData, profileMonths, isProfileSetup);
+			break;
+		case SEARCH_INDEX: {
+			char targetMonth[COMMAND_MAX_SIZE];
+			std::cin >> targetMonth;
+			searchByMonth(profileData, profileMonths, isProfileSetup, targetMonth);
+			break;
+		}
+		case SORT_INDEX: {
+			char sortType[COMMAND_MAX_SIZE];
+			std::cin >> sortType;
+			sortByType(profileData, profileMonths, isProfileSetup, sortType);
+			break;
+		}
+		case FORECAST_INDEX: {
+			int monthsAhead = 0;
+			std::cin >> monthsAhead;
+			validateMonthsInputAndCallForecast(profileData, profileMonths, isProfileSetup, monthsAhead);
+			break;
+		}
+		case CHART_INDEX: {
+			char chartType[COMMAND_MAX_SIZE];
+			std::cin >> chartType;
+			drawFinanceChart(profileData, profileMonths, isProfileSetup, chartType);
+			break;
+		}
+		default:
+			std::cout << "Invalid command. Please try again." << std::endl;
+			break;
+	}
 }
 
 void executeFinanceTracker() {
@@ -598,54 +644,18 @@ void executeFinanceTracker() {
 		toLowercase(command);
 		int commandIndex = getCommandIndex(command);
 
+		if (commandIndex == EXIT_INDEX) {
+			monthlyReport(profileData, profileMonths, isProfileSetup);
+			return;
+		}
+
 		if (isProfileSetup && commandIndex == SETUP_INDEX) {
 			std::cout << "The profile has already been set." << std::endl;
 			std::cin >> command;
 			continue;
 		}
 
-		switch (commandIndex) {
-			case EXIT_INDEX:
-				monthlyReport(profileData, profileMonths, isProfileSetup);
-				return;
-			case SETUP_INDEX:
-				setupProfile(profileData, profileMonths, isProfileSetup);
-				break;
-			case ADD_INDEX:
-				addFinanceData(profileData, profileMonths, isProfileSetup);
-				break;
-			case REPORT_INDEX:
-				monthlyReport(profileData, profileMonths, isProfileSetup);
-				break;
-			case SEARCH_INDEX: {
-				char targetMonth[COMMAND_MAX_SIZE];
-				std::cin >> targetMonth;
-				searchByMonth(profileData, profileMonths, isProfileSetup, targetMonth);
-				break;
-			}
-			case SORT_INDEX: {
-				char sortType[COMMAND_MAX_SIZE];
-				std::cin >> sortType;
-				sortByType(profileData, profileMonths, isProfileSetup, sortType);
-				break;
-			}
-			case FORECAST_INDEX: {
-				int monthsAhead = 0;
-				std::cin >> monthsAhead;
-				validateMonthsInputAndCallForecast(profileData, profileMonths, isProfileSetup, monthsAhead);
-				break;
-			}
-			case CHART_INDEX: {
-				char chartType[COMMAND_MAX_SIZE];
-				std::cin >> chartType;
-				drawFinanceChart(profileData, profileMonths, isProfileSetup, chartType);
-				break;
-			}
-			default:
-				std::cout << "Invalid command. Please try again." << std::endl;
-				break;
-		}
-
+		handleCommand(commandIndex, profileData, profileMonths, isProfileSetup);
 		std::cin >> command;
 	}
 }
