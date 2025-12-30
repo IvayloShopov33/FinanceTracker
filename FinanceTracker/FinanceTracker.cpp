@@ -124,7 +124,7 @@ void toLowercase(char* str) {
 
 	size_t strLength = stringLength(str);
 
-	for (int i = 0; i < strLength; i++) {
+	for (size_t i = 0; i < strLength; i++) {
 		if (isCharacterUppercase(str[i])) {
 			str[i] = str[i] + ('a' - 'A');
 		}
@@ -138,7 +138,7 @@ void toUppercase(char* str) {
 
 	size_t strLength = stringLength(str);
 
-	for (int i = 0; i < strLength; i++) {
+	for (size_t i = 0; i < strLength; i++) {
 		if (!isCharacterUppercase(str[i])) {
 			str[i] = str[i] - ('a' - 'A');
 		}
@@ -157,7 +157,7 @@ bool areStringsEqual(const char* firstString, const char* secondString) {
 		return false;
 	}
 
-	for (int i = 0; i < firstStringLength; i++) {
+	for (size_t i = 0; i < firstStringLength; i++) {
 		if (firstString[i] != secondString[i]) {
 			return false;
 		}
@@ -240,9 +240,12 @@ double getValueByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE],
 	}
 }
 
-void sortMonthIndices(int indicesOfMonths[MONTHS_MAX_VALUE], int monthsCount, double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int typeIndex) {
-	for (size_t i = 0; i < monthsCount - 1; i++) {
-		for (size_t j = 0; j < monthsCount - i - 1; j++) {
+void sortMonthIndices(int indicesOfMonths[MONTHS_MAX_VALUE], 
+						int monthsCount, 
+						double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], 
+						int typeIndex) {
+	for (int i = 0; i < monthsCount - 1; i++) {
+		for (int j = 0; j < monthsCount - i - 1; j++) {
 			double firstValue = getValueByType(profileData, indicesOfMonths[j], typeIndex);
 			double secondValue = getValueByType(profileData, indicesOfMonths[j + 1], typeIndex);
 
@@ -283,11 +286,12 @@ void setupProfile(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int
 	}
 
 	if (profileMonths < MONTHS_MIN_VALUE || profileMonths > MONTHS_MAX_VALUE) {
-		std::cout << "Invalid number of months for profile setup. It must be a number between " << MONTHS_MIN_VALUE << " and " << MONTHS_MAX_VALUE << "." << std::endl;
+		std::cout << "Invalid number of months for profile setup. It must be a number between " 
+			<< MONTHS_MIN_VALUE << " and " << MONTHS_MAX_VALUE << "." << std::endl;
 		return;
 	}
 
-	for (size_t month = 0; month < profileMonths; month++) {
+	for (int month = 0; month < profileMonths; month++) {
 		profileData[PROFILE_INCOME_INDEX][month] = MONTH_DEFAULT_EMPTY_VALUE;
 		profileData[PROFILE_EXPENSE_INDEX][month] = MONTH_DEFAULT_EMPTY_VALUE;
 	}
@@ -310,11 +314,13 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 	}
 
 	if (month < MONTHS_MIN_VALUE || month > profileMonths) {
-		std::cout << "Invalid month number. Please enter a value between " << MONTHS_MIN_VALUE << " and " << profileMonths << "." << std::endl;
+		std::cout << "Invalid month number. Please enter a value between " 
+			<< MONTHS_MIN_VALUE << " and " << profileMonths << "." << std::endl;
 		return;
 	}
 
-	if (profileData[PROFILE_INCOME_INDEX][month - 1] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month - 1] != MONTH_DEFAULT_EMPTY_VALUE) {
+	if (profileData[PROFILE_INCOME_INDEX][month - 1] != MONTH_DEFAULT_EMPTY_VALUE || 
+		profileData[PROFILE_EXPENSE_INDEX][month - 1] != MONTH_DEFAULT_EMPTY_VALUE) {
 		std::cout << "[Note: Adding to existing data for ";
 		printMonthName(month);
 		std::cout << "]" << std::endl;
@@ -359,7 +365,8 @@ void monthlyReport(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 	int activeMonths = 0;
 
 	for (int month = 0; month < profileMonths; month++) {
-		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE) {
+		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || 
+			profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE) {
 			double income = profileData[PROFILE_INCOME_INDEX][month];
 			double expense = profileData[PROFILE_EXPENSE_INDEX][month];
 			double balance = income - expense;
@@ -381,7 +388,8 @@ void monthlyReport(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], in
 
 	if (activeMonths > 0) {
 		double averageBalance = (totalIncome - totalExpenses) / activeMonths;
-		std::cout << "Average Balance: " << (averageBalance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << averageBalance << std::endl;
+		std::cout << "Average Balance: " << (averageBalance > 0 ? "+" : "") 
+			<< std::fixed << std::setprecision(2) << averageBalance << std::endl;
 	}
 	else {
 		std::cout << "Average Balance: 0.00 (No active months)" << std::endl;
@@ -455,7 +463,8 @@ void sortByType(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int p
 
 	for (int i = 0; i < sortingLimit; i++) {
 		double sortedValue = getValueByType(profileData, indicesOfMonths[i], sortingTypeIndex);
-		std::cout << i + 1 << ". " << MONTH_ABBREVIATIONS[indicesOfMonths[i]] << ": " << (sortedValue > 0 ? "+" : "") << std::fixed << std::setprecision(2) << sortedValue << std::endl;
+		std::cout << i + 1 << ". " << MONTH_ABBREVIATIONS[indicesOfMonths[i]] << ": " << (sortedValue > 0 ? "+" : "") 
+			<< std::fixed << std::setprecision(2) << sortedValue << std::endl;
 	}
 }
 
@@ -467,7 +476,7 @@ void forecastSavings(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], 
 	double totalSavings = 0;
 	int activeMonths = 0;
 
-	for (size_t i = 0; i < profileMonths; i++) {
+	for (int i = 0; i < profileMonths; i++) {
 		double currentMonthIncome = profileData[PROFILE_INCOME_INDEX][i];
 		double currentMonthExpense = profileData[PROFILE_EXPENSE_INDEX][i];
 
@@ -484,11 +493,13 @@ void forecastSavings(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], 
 
 	double averageMonthlyChange = totalSavings / activeMonths;
 	std::cout << "Current total savings: " << std::fixed << std::setprecision(2) << totalSavings << std::endl;
-	std::cout << "Average monthly change: " << (averageMonthlyChange > 0 ? "+" : "") << std::fixed << std::setprecision(2) << averageMonthlyChange << std::endl;
+	std::cout << "Average monthly change: " << (averageMonthlyChange > 0 ? "+" : "") 
+		<< std::fixed << std::setprecision(2) << averageMonthlyChange << std::endl;
 
 	if (averageMonthlyChange >= 0) {
 		double predictedSavings = totalSavings + monthsAhead * averageMonthlyChange;
-		std::cout << "Predicted savings after " << monthsAhead << " months: " << std::fixed << std::setprecision(2) << predictedSavings << std::endl;
+		std::cout << "Predicted savings after " << monthsAhead << " months: " 
+			<< std::fixed << std::setprecision(2) << predictedSavings << std::endl;
 	}
 	else {
 		if (totalSavings <= 0) {
@@ -503,7 +514,10 @@ void forecastSavings(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], 
 	}
 }
 
-void validateMonthsInputAndCallForecast(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup, int monthsAhead) {
+void validateMonthsInputAndCallForecast(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], 
+											int profileMonths, 
+											bool isProfileSetup, 
+											int monthsAhead) {
 	if (isInputInvalid()) {
 		return;
 	}
@@ -535,8 +549,9 @@ int getMaxValueForChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE
 }
 
 void printChartAxisMonths(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths) {
-	for (size_t month = 0; month < profileMonths; month++) {
-		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE) {
+	for (int month = 0; month < profileMonths; month++) {
+		if (profileData[PROFILE_INCOME_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE || 
+			profileData[PROFILE_EXPENSE_INDEX][month] != MONTH_DEFAULT_EMPTY_VALUE) {
 			std::cout << MONTH_ABBREVIATIONS[month] << " ";
 		}
 	}
@@ -592,7 +607,7 @@ void drawFinanceChart(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE],
 	printChartAxisMonths(profileData, profileMonths);
 }
 
-void handleCommand(int commandIndex, double  profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool& isProfileSetup) {
+void handleCommand(int commandIndex, double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int& profileMonths, bool& isProfileSetup) {
 	switch (commandIndex) {
 		case SETUP_INDEX:
 			setupProfile(profileData, profileMonths, isProfileSetup);
