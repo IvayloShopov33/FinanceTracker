@@ -326,7 +326,7 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 		std::cout << "]" << std::endl;
 	}
 
-	int income = 0, expense = 0;
+	double income = 0, expense = 0;
 
 	std::cout << "Enter income: ";
 	std::cin >> income;
@@ -349,7 +349,7 @@ void addFinanceData(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], i
 
 	std::cout << "Balance for ";
 	printMonthName(month);
-	std::cout << ": " << (balance > 0 ? "+" : "") << balance << std::endl;
+	std::cout << ": " << (balance > 0 ? "+" : "") << std::fixed << std::setprecision(2) << balance << std::endl;
 }
 
 void monthlyReport(double profileData[PROFILE_TOTAL_INDEX][MONTHS_MAX_VALUE], int profileMonths, bool isProfileSetup) {
